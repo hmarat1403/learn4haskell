@@ -508,7 +508,13 @@ and provide more flexibility when working with data types.
 Create a simple enumeration for the meal types (e.g. breakfast). The one who
 comes up with the most number of names wins the challenge. Use your creativity!
 -}
-
+data Breakfast 
+    = Coffe
+    | Tea 
+    | Juise
+    | Milk 
+    | Water
+    deriving Show 
 {- |
 =⚔️= Task 4
 
@@ -528,6 +534,131 @@ After defining the city, implement the following functions:
    complicated task, walls can be built only if the city has a castle
    and at least 10 living __people__ inside in all houses of the city in total.
 -}
+data Houses = Houses
+            { singlePeople :: Int 
+            , doublePeople :: Int
+            , triplePeople :: Int
+            , quadroplePeople :: Int
+            } deriving Show 
+
+data Culture = Church | Library
+               deriving (Show, Eq) 
+
+data Castle = Castle { castleName :: CastleName
+                     , wall :: Bool
+                     } deriving (Show, Eq) 
+
+type CastleName = String 
+
+data CastleExist = Exist Castle | NoCastle 
+                    deriving (Show, Eq)
+
+data City = City 
+          { cityName :: String
+          , houses :: Houses
+          , culture :: Culture
+          , castle :: CastleExist
+          } deriving Show 
+
+
+updateCastle :: CastleName -> CastleExist ->  CastleExist
+updateCastle newCastleName cityCastle = case cityCastle of 
+    NoCastle  -> Exist $ Castle {castleName = newCastleName, wall = False}
+    Exist oldCastle -> Exist $ Castle {castleName = newCastleName, wall = wall oldCastle}
+
+buildCastle :: CastleName -> City -> City 
+buildCastle newCastleName city = City { cityName = cityName city
+                                      , houses = houses city 
+                                      , culture = culture city 
+                                      , castle = updateCastle newCastleName (castle city) 
+                                      } 
+
+updateHouses :: Int -> Houses -> Houses 
+updateHouses newHouse buildes = case newHouse of 
+    1 -> Houses { singlePeople = singlePeople buildes + 1
+                , doublePeople = doublePeople buildes
+                , triplePeople = triplePeople buildes
+                , quadroplePeople = quadroplePeople buildes
+                }
+    2 -> Houses { singlePeople = singlePeople buildes 
+                , doublePeople = doublePeople buildes +1
+                , triplePeople = triplePeople buildes
+                , quadroplePeople = quadroplePeople buildes
+                }
+    3 -> Houses { singlePeople = singlePeople buildes 
+                , doublePeople = doublePeople buildes
+                , triplePeople = triplePeople buildes + 1
+                , quadroplePeople = quadroplePeople buildes
+                }
+    4 -> Houses { singlePeople = singlePeople buildes 
+                , doublePeople = doublePeople buildes
+                , triplePeople = triplePeople buildes
+                , quadroplePeople = quadroplePeople buildes + 1
+                }
+    
+buildHouse :: Int -> City -> City 
+buildHouse newHouse city 
+    | newHouse <= 4 = City { cityName = cityName city
+                           , houses = updateHouses newHouse (houses city)
+                           , culture = culture city 
+                           , castle = castle city 
+                           } 
+    | otherwise = error "You can't build so large house!"
+
+buildWalls :: City -> City 
+buildWalls city = case castle city of 
+    NoCastle     -> error "You can't build wall without Castle!"
+    Exist oldCastle -> if peoplesInCity (houses city) < 10 
+                    then error "Don't enough peoples for building!" 
+                    else City { cityName = cityName city
+                                , houses = houses city
+                                , culture = culture city 
+                                , castle = Exist $ Castle { castleName = castleName oldCastle 
+                                                          , wall = True
+                                                          } 
+                                } 
+                         
+
+peoplesInCity :: Houses -> Int   -- check the number of city residents
+peoplesInCity buildes = singlePeople buildes
+                     + 2 * doublePeople buildes   
+                     + 3 * triplePeople buildes
+                     + 4 * quadroplePeople buildes
+
+-- test variables
+fataMorganaCity :: City
+fataMorganaCity = City 
+                { cityName = "Fata Morgana"
+                , houses = buildsFM
+                , culture = Library
+                , castle = NoCastle
+                }
+buildsFM :: Houses 
+buildsFM = Houses
+        { singlePeople = 2 
+        , doublePeople = 5
+        , triplePeople = 15
+        , quadroplePeople = 4
+        }
+avalonCity :: City
+avalonCity = City 
+                { cityName = "Avalon"
+                , houses = buildsA
+                , culture = Library
+                , castle = Exist castleAvalon
+                }
+buildsA :: Houses 
+buildsA = Houses
+        { singlePeople = 1 
+        , doublePeople = 3
+        , triplePeople = 0
+        , quadroplePeople = 0
+        }
+castleAvalon :: Castle
+castleAvalon = Castle 
+              { castleName = "Avalones Castle"
+              , wall = False
+              }
 
 {-
 =🛡= Newtypes

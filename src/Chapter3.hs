@@ -394,13 +394,14 @@ data Monster = Monster
     , monsterGold :: Gold 
     } deriving Show 
 
-type Gold = Float
+--type Gold = Float
+-- redefined in Task 7 (line 1116)
     
-fight :: Knight -> Monster -> Gold 
-fight knight monster 
-    | attackKnight >= 0   = knightGold knight + monsterGold monster 
-    | attackMonster >= 0  = -1
-    | otherwise           = knightGold knight
+fight :: Knight -> Monster -> Maybe Gold  
+fight knight monster
+    | attackKnight >= 0   = Just $ append (knightGold knight) (monsterGold monster) 
+    | attackMonster >= 0  = Nothing 
+    | otherwise           = Just $ knightGold knight
     where attackKnight = knightAttack knight - monsterHealth monster
           attackMonster = monsterAttack monster - knightHealth knight
 
@@ -408,20 +409,20 @@ arthur :: Knight
 arthur = Knight { knightName = "Arthur"
                 , knightHealth = 50
                 , knightAttack = 100 
-                , knightGold = 1000.0
+                , knightGold = Gold 1000.0
                 , knightVictories = 0
                 }
 mill :: Monster
 mill = Monster  { monsterKind = "Mill"
                 , monsterHealth = 55
                 , monsterAttack = 5 
-                , monsterGold = 25.5
+                , monsterGold = Gold 25.5
                 }  
 dragon :: Monster
 dragon = Monster { monsterKind = "Dragon"
                 , monsterHealth = 150
                 , monsterAttack = 55 
-                , monsterGold = 1000
+                , monsterGold = Gold 1000
                 }                 
 {- |
 =🛡= Sum types
@@ -941,6 +942,19 @@ parametrise data types in places where values can be of any general type.
 🕯 HINT: 'Maybe' that some standard types we mentioned above are useful for
   maybe-treasure ;)
 -}
+data Lair a b = Lair 
+    { lairDragon :: Dragon a 
+    , lairTreasure :: Maybe (TreasureChest b)}
+
+data TreasureChest x = TreasureChest
+    { treasureChestGold :: Int
+    , treasureChestLoot :: x
+    }
+
+data Dragon y = Dragon 
+    { dragonName :: String 
+    , dragonPower :: y 
+    }
 
 {-
 =🛡= Typeclasses
@@ -1099,6 +1113,11 @@ Implement instances of "Append" for the following types:
 class Append a where
     append :: a -> a -> a
 
+newtype Gold = Gold Float 
+    deriving Show
+
+instance Append Gold 
+    where append (Gold x) (Gold y) = Gold (x + y)
 
 {-
 =🛡= Standard Typeclasses and Deriving
@@ -1159,7 +1178,26 @@ implement the following functions:
 
 🕯 HINT: to implement this task, derive some standard typeclasses
 -}
+data WeekDays = Sunday | Monday | Tuesday | Wednesday | Thursday | Friday | Saturday 
+    deriving (Show, Read, Eq, Ord, Enum)
 
+isWeekend :: WeekDays -> Bool 
+isWeekend day = case day of
+    Sunday  -> True 
+    Monday  -> True 
+    Friday  -> True 
+    _       -> False 
+
+nextDay :: WeekDays -> WeekDays 
+nextDay day = case day of 
+    Saturday -> Sunday 
+    _ -> toEnum $ fromEnum day + 1
+
+daysToParty :: WeekDays -> Int 
+daysToParty day = case day of 
+    Saturday -> 6
+    _ -> toEnum $ 5 - fromEnum day 
+    
 {-
 =💣= Task 9*
 

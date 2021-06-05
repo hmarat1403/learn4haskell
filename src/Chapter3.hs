@@ -383,6 +383,7 @@ data Knight = Knight
     { knightName :: String
     , knightHealth :: Int
     , knightAttack :: Int 
+    , knightDefense :: Int 
     , knightGold :: Gold 
     , knightVictories :: Int
     } deriving Show 
@@ -409,6 +410,7 @@ arthur :: Knight
 arthur = Knight { knightName = "Arthur"
                 , knightHealth = 50
                 , knightAttack = 100 
+                , knightDefense = 10
                 , knightGold = Gold 1000.0
                 , knightVictories = 0
                 }
@@ -609,15 +611,16 @@ buildHouse newHouse city
 buildWalls :: City -> City 
 buildWalls city = case castle city of 
     NoCastle     -> error "You can't build wall without Castle!"
-    Exist oldCastle -> if peoplesInCity (houses city) < 10 
-                    then error "Don't enough peoples for building!" 
-                    else City { cityName = cityName city
-                                , houses = houses city
-                                , culture = culture city 
-                                , castle = Exist $ Castle { castleName = castleName oldCastle 
-                                                          , wall = True
-                                                          } 
-                                } 
+    Exist oldCastle -> 
+        if peoplesInCity (houses city) < 10 
+        then error "Don't enough peoples for building!" 
+        else City { cityName = cityName city
+                  , houses = houses city
+                  , culture = culture city 
+                  , castle = Exist $ Castle { castleName = castleName oldCastle 
+                                            , wall = True
+                                            } 
+                  } 
                          
 
 peoplesInCity :: Houses -> Int   -- check the number of city residents
@@ -1118,6 +1121,17 @@ newtype Gold = Gold Float
 
 instance Append Gold 
     where append (Gold x) (Gold y) = Gold (x + y)
+
+instance Append [a] 
+    where append xs ys = xs ++ ys 
+
+instance Append a => Append (Maybe a) 
+    where append :: Maybe a -> Maybe a -> Maybe a 
+          append Nothing n  = n
+          append (Just x) n = case n of 
+              Nothing   -> Just x 
+              Just y    -> Just $ append x y 
+
 
 {-
 =🛡= Standard Typeclasses and Deriving

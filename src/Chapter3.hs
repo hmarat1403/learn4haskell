@@ -417,7 +417,7 @@ arthur = Knight { knightName = "Arthur"
 mill :: Monster
 mill = Monster  { monsterKind = "Mill"
                 , monsterHealth = 55
-                , monsterAttack = 5 
+                , monsterAttack = 25 
                 , monsterGold = Gold 25.5
                 }  
 dragon :: Monster
@@ -570,42 +570,18 @@ updateCastle newCastleName cityCastle = case cityCastle of
     Exist oldCastle -> Exist $ Castle {castleName = newCastleName, wall = wall oldCastle}
 
 buildCastle :: CastleName -> City -> City 
-buildCastle newCastleName city = City { cityName = cityName city
-                                      , houses = houses city 
-                                      , culture = culture city 
-                                      , castle = updateCastle newCastleName (castle city) 
-                                      } 
+buildCastle newCastleName city = city { castle = updateCastle newCastleName (castle city)} 
 
 updateHouses :: Int -> Houses -> Houses 
 updateHouses newHouse buildes = case newHouse of 
-    1 -> Houses { singlePeople = singlePeople buildes + 1
-                , doublePeople = doublePeople buildes
-                , triplePeople = triplePeople buildes
-                , quadroplePeople = quadroplePeople buildes
-                }
-    2 -> Houses { singlePeople = singlePeople buildes 
-                , doublePeople = doublePeople buildes +1
-                , triplePeople = triplePeople buildes
-                , quadroplePeople = quadroplePeople buildes
-                }
-    3 -> Houses { singlePeople = singlePeople buildes 
-                , doublePeople = doublePeople buildes
-                , triplePeople = triplePeople buildes + 1
-                , quadroplePeople = quadroplePeople buildes
-                }
-    4 -> Houses { singlePeople = singlePeople buildes 
-                , doublePeople = doublePeople buildes
-                , triplePeople = triplePeople buildes
-                , quadroplePeople = quadroplePeople buildes + 1
-                }
+    1 -> buildes { singlePeople = singlePeople buildes + 1}
+    2 -> buildes { doublePeople = doublePeople buildes +1}
+    3 -> buildes { triplePeople = triplePeople buildes + 1}
+    4 -> buildes { quadroplePeople = quadroplePeople buildes + 1}
     
 buildHouse :: Int -> City -> City 
 buildHouse newHouse city 
-    | newHouse <= 4 = City { cityName = cityName city
-                           , houses = updateHouses newHouse (houses city)
-                           , culture = culture city 
-                           , castle = castle city 
-                           } 
+    | newHouse <= 4 = city { houses = updateHouses newHouse (houses city)} 
     | otherwise = error "You can't build so large house!"
 
 buildWalls :: City -> City 
@@ -614,10 +590,7 @@ buildWalls city = case castle city of
     Exist oldCastle -> 
         if peoplesInCity (houses city) < 10 
         then error "Don't enough peoples for building!" 
-        else City { cityName = cityName city
-                  , houses = houses city
-                  , culture = culture city 
-                  , castle = Exist $ Castle { castleName = castleName oldCastle 
+        else city { castle = Exist $ Castle { castleName = castleName oldCastle 
                                             , wall = True
                                             } 
                   } 
@@ -1246,7 +1219,28 @@ properties using typeclasses, but they are different data types in the end.
 Implement data types and typeclasses, describing such a battle between two
 contestants, and write a function that decides the outcome of a fight!
 -}
+class Fighter a where 
+    attack :: a -> Int 
+    defence :: a -> Int 
+    takeDamage :: a -> Int -> a 
 
+instance Fighter Knight where 
+    attack = knightAttack
+    defence = knightDefense
+    takeDamage knight attacked = newKnight where 
+        newKnight = knight {knightHealth = knightHealth knight - (attacked - knightDefense knight)
+                           }
+instance Fighter Monster where
+    attack = monsterAttack
+    defence = const 0
+    takeDamage monster attacked = newMonster where 
+        newMonster = monster { monsterHealth = monsterHealth monster - attacked }
+
+drinkPotion :: Knight -> Knight 
+drinkPotion knight = knight {knightHealth = knightHealth knight + 10}     
+
+castDefence :: Knight -> Knight 
+castDefence knight = knight {knightDefense = knightDefense knight + 10}
 
 {-
 You did it! Now it is time to open pull request with your changes
